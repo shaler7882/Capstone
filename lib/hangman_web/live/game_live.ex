@@ -4,6 +4,7 @@ defmodule HangmanWeb.GameLive do
   alias Hangman.Repo
 
   alias Hangman.Accounts.{User, UserToken, UserNotifier}
+  alias Hangman.HighScores
 
   def mount(params, session, socket) do
     list_of_words = [
@@ -18,7 +19,17 @@ defmodule HangmanWeb.GameLive do
     ]
 
     winning_word = String.downcase(Faker.Vehicle.make())
-    {:ok, assign(socket, winning_word: winning_word, guesses: [], lives: 6, result: false, body_img: "/images/post.jpg", high_score: 0)}
+
+    {:ok,
+     assign(socket,
+       winning_word: winning_word,
+       guesses: [],
+       lives: 6,
+       result: false,
+       body_img: "/images/post.jpg",
+       high_score: 0,
+       top5_scores: HighScores.top5_high_scores()
+     )}
   end
 
   def render(assigns) do
@@ -37,9 +48,17 @@ defmodule HangmanWeb.GameLive do
         </.link>
       <% end %>
     </div>
-    <div class="lives">Lives Left = <%= @lives %></div>
-    <div class="high">Score <%= @high_score %></div>
-    <img class="pic" src={@body_img}>
+    <div class="parent">
+      <div class="lives">Lives Left = <%= @lives %></div>
+      <div class="high">Score <%= @high_score %></div>
+      <div class="top5">
+        <h2>Top 5 High Scores</h2>
+        <.table id="Top 5 High Scores" rows={@top5_scores}>
+          <:col :let={score} label="score"><%= score.value %></:col>
+        </.table>
+      </div>
+    </div>
+    <img class="pic" src={@body_img} />
     <div class="word">
       <%= for char <- String.graphemes(@winning_word) do %>
         <%= if char in @guesses, do: char, else: "_" %>
@@ -63,12 +82,12 @@ defmodule HangmanWeb.GameLive do
     %{"guess" => guess} = unsigned_params
     guesses = [guess | socket.assigns.guesses]
 
-    minus_life =
-      Enum.member?(String.graphemes(socket.assigns.winning_word), guess)
+    minus_life = Enum.member?(String.graphemes(socket.assigns.winning_word), guess)
 
     lives = if minus_life, do: socket.assigns.lives, else: socket.assigns.lives - 1
 
-    high_score = if minus_life, do: socket.assigns.high_score + 100, else: socket.assigns.high_score
+    high_score =
+      if minus_life, do: socket.assigns.high_score + 100, else: socket.assigns.high_score
 
     body_part =
       case lives do
@@ -84,7 +103,27 @@ defmodule HangmanWeb.GameLive do
 
     is_winner =
       Enum.all?(String.graphemes(socket.assigns.winning_word), fn each -> each in guesses end)
-    
-    {:noreply, assign(socket, guesses: guesses, result: is_winner, lives: lives, body_img: body_part, high_score: high_score)}
+
+    if socket.assigns[:current_user] do
+      total_high_score = HighScores.get_user_high_score(socket.assigns.current_user.id)
+      IO.inspect(total_high_score, label: "**********")
+
+      if total_high_score do
+        if high_score > total_high_score.value do
+          HighScores.update_high_score(total_high_score, %{value: high_score})
+        end
+      else
+        HighScores.create_high_score(%{value: high_score, user_id: socket.assigns.current_user.id})
+      end
+    end
+
+    {:noreply,
+     assign(socket,
+       guesses: guesses,
+       result: is_winner,
+       lives: lives,
+       body_img: body_part,
+       high_score: high_score
+     )}
   end
 end

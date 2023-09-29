@@ -21,7 +21,11 @@ defmodule HangmanWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    live "/game", GameLive
+
+    live_session :games,
+      on_mount: [{HangmanWeb.UserAuth, :mount_current_user}] do
+      live "/game", GameLive
+    end
   end
 
   # Other scopes may use custom stacks.
