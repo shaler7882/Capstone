@@ -31,6 +31,7 @@
 }
 
 .win {
+    position: absolute;
     display: block;
     width: 100%;
     border: none;
@@ -40,7 +41,10 @@
     font-size: 50px;
     cursor: pointer;
     text-align: center;
-    height: 300px;
+    height: 500px;
+}
+.win:hover{
+    background-color: rgb(43, 41, 41);
 }
 
 .lives {

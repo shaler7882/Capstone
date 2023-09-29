@@ -27,50 +27,55 @@ defmodule HangmanWeb.GameLive do
 
   def render(assigns) do
     ~H"""
-    <div>
-      <%= if @result do %>
-        <.link href="/game">
-          <.button class="win">WINNER<br />Play Again</.button>
-        </.link>
-      <% end %>
-    </div>
-    <div>
-      <%= if @lives == 0 do %>
-        <.link href="/game">
-          <.button class="win">LOSER<br />Play Again</.button>
-        </.link>
-      <% end %>
-    </div>
-    <div class="parent">
-      <div class="lives">Lives Left = <%= @lives %></div>
-      <img class="pic" src={@body_img} />
-      <div class="high">Score <%= @high_score %></div>
-      <div class="top5">
-        <h2>Top 5 High Scores</h2>
-        <.table id="Top 5 High Scores" rows={@top5_scores}>
-          <:col :let={score} label="Name">
-            <%= String.split(score.user.email, "@") |> List.first() %>
-          </:col>
-          <:col :let={score} label="Score"><%= score.value %></:col>
-        </.table>
+    <%= if @result do %>
+      <.link href="/game">
+        <button class="win">
+          <p>WINNER</p>
+          <p>Play Again</p>
+        </button>
+      </.link>
+    <% end %>
+
+    <%= if @lives == 0 do %>
+      <.link href="/game">
+        <button class="win">
+          <p>LOSER</p>
+          <p>Play Again</p>
+        </button>
+      </.link>
+    <% end %>
+    <%= unless @lives == 0 or @result do %>
+      <div class="parent">
+        <div class="lives">Lives Left = <%= @lives %></div>
+        <img class="pic" src={@body_img} />
+        <div class="high">Score <%= @high_score %></div>
+        <div class="top5">
+          <h2>Top 5 High Scores</h2>
+          <.table id="Top 5 High Scores" rows={@top5_scores}>
+            <:col :let={score} label="Name">
+              <%= String.split(score.user.email, "@") |> List.first() %>
+            </:col>
+            <:col :let={score} label="Score"><%= score.value %></:col>
+          </.table>
+        </div>
       </div>
-    </div>
-    <div class="word">
-      <%= for char <- String.graphemes(@winning_word) do %>
-        <%= if char in @guesses, do: char, else: "_" %>
-      <% end %>
-    </div>
-    <div class="guess">
-      <%= for char <- String.graphemes("ABCDEFGHIJKLMNOPQRSTUVWXYZ") do %>
-        <%= if String.downcase(char) in @guesses do %>
-          <.button></.button>
-        <% else %>
-          <.button phx-click="enter_guess" phx-value-guess={String.downcase(char)}>
-            <%= char %>
-          </.button>
+      <div class="word">
+        <%= for char <- String.graphemes(@winning_word) do %>
+          <%= if char in @guesses, do: char, else: "_" %>
         <% end %>
-      <% end %>
-    </div>
+      </div>
+      <div class="guess">
+        <%= for char <- String.graphemes("ABCDEFGHIJKLMNOPQRSTUVWXYZ") do %>
+          <%= if String.downcase(char) in @guesses do %>
+            <.button></.button>
+          <% else %>
+            <.button phx-click="enter_guess" phx-value-guess={String.downcase(char)}>
+              <%= char %>
+            </.button>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
     """
   end
 
@@ -111,7 +116,9 @@ defmodule HangmanWeb.GameLive do
         HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
 
       is_winner && total_high_score ->
-        HighScores.update_high_score(total_high_score, %{value: high_score + total_high_score.value})
+        HighScores.update_high_score(total_high_score, %{
+          value: high_score + total_high_score.value
+        })
 
         HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
 
@@ -138,6 +145,7 @@ defmodule HangmanWeb.GameLive do
 
   defp gen_word() do
     word = Faker.Vehicle.make()
+
     if word =~ " " or word =~ "-" do
       gen_word()
     else
