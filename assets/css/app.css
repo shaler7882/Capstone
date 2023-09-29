@@ -23,8 +23,8 @@
     padding: 5px;
     position: absolute;
     top: 3%;
-    left: 25%;
-    width: 50%;
+    left: 10%;
+    width: 75%;
     font-size: 40px;
     font-weight: bold;
 
@@ -47,7 +47,7 @@
     font-size: 25px;
     color: black;
     display: inline-block;
-    width: 100%;
+    width: 20%;
     text-align: left;
     left: 25%;
 }
@@ -56,8 +56,10 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 70%;
+    width: 50%;
     height: 400px;
+    top: 10%;
+
 }
 
 .high {
@@ -71,7 +73,7 @@
 .top5 {
     font-size: 25px;
     color: black;
-    width: 30%;
+    width: 15%;
 
 }
 

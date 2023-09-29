@@ -11,7 +11,7 @@ defmodule HangmanWeb.GameLive do
       HangmanWeb.Endpoint.subscribe("top_scores")
     end
 
-    winning_word = String.downcase(Faker.Vehicle.make())
+    winning_word = String.downcase(gen_word())
 
     {:ok,
      assign(socket,
@@ -43,6 +43,7 @@ defmodule HangmanWeb.GameLive do
     </div>
     <div class="parent">
       <div class="lives">Lives Left = <%= @lives %></div>
+      <img class="pic" src={@body_img} />
       <div class="high">Score <%= @high_score %></div>
       <div class="top5">
         <h2>Top 5 High Scores</h2>
@@ -54,7 +55,6 @@ defmodule HangmanWeb.GameLive do
         </.table>
       </div>
     </div>
-    <img class="pic" src={@body_img} />
     <div class="word">
       <%= for char <- String.graphemes(@winning_word) do %>
         <%= if char in @guesses, do: char, else: "_" %>
@@ -105,13 +105,13 @@ defmodule HangmanWeb.GameLive do
         HighScores.get_user_high_score(socket.assigns.current_user.id)
 
     cond do
-      is_winner && !total_high_score ->
+      is_winner && !total_high_score && socket.assigns[:current_user] ->
         HighScores.create_high_score(%{value: high_score, user_id: socket.assigns.current_user.id})
 
         HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
 
-      is_winner && high_score > total_high_score.value ->
-        HighScores.update_high_score(total_high_score, %{value: high_score})
+      is_winner && total_high_score ->
+        HighScores.update_high_score(total_high_score, %{value: high_score + total_high_score.value})
 
         HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
 
@@ -134,5 +134,14 @@ defmodule HangmanWeb.GameLive do
         socket
       ) do
     {:noreply, assign(socket, top5_scores: HighScores.top5_high_scores())}
+  end
+
+  defp gen_word() do
+    word = Faker.Vehicle.make()
+    if word =~ " " or word =~ "-" do
+      gen_word()
+    else
+      word
+    end
   end
 end
