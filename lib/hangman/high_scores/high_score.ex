@@ -4,7 +4,7 @@ defmodule Hangman.HighScores.HighScore do
 
   schema "high_scores" do
     field :value, :integer
-    field :user_id, :id
+    belongs_to :user, Hangman.Accounts.User
 
     timestamps()
   end

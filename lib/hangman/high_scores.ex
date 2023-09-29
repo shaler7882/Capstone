@@ -23,7 +23,7 @@ defmodule Hangman.HighScores do
 
   def top5_high_scores do
     from(h in HighScore,
-    order_by: [desc: :value], limit: 5)
+    order_by: [desc: :value], limit: 5, preload: :user)
     |> Repo.all()
   end
 

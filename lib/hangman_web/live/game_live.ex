@@ -7,16 +7,9 @@ defmodule HangmanWeb.GameLive do
   alias Hangman.HighScores
 
   def mount(params, session, socket) do
-    list_of_words = [
-      "elixir",
-      "strings",
-      "booleans",
-      "atoms",
-      "tuples",
-      "lists",
-      "maps",
-      "functions"
-    ]
+    if connected?(socket) do
+      HangmanWeb.Endpoint.subscribe("top_scores")
+    end
 
     winning_word = String.downcase(Faker.Vehicle.make())
 
@@ -54,7 +47,10 @@ defmodule HangmanWeb.GameLive do
       <div class="top5">
         <h2>Top 5 High Scores</h2>
         <.table id="Top 5 High Scores" rows={@top5_scores}>
-          <:col :let={score} label="score"><%= score.value %></:col>
+          <:col :let={score} label="Name">
+            <%= String.split(score.user.email, "@") |> List.first() %>
+          </:col>
+          <:col :let={score} label="Score"><%= score.value %></:col>
         </.table>
       </div>
     </div>
@@ -104,17 +100,23 @@ defmodule HangmanWeb.GameLive do
     is_winner =
       Enum.all?(String.graphemes(socket.assigns.winning_word), fn each -> each in guesses end)
 
-    if socket.assigns[:current_user] do
-      total_high_score = HighScores.get_user_high_score(socket.assigns.current_user.id)
-      IO.inspect(total_high_score, label: "**********")
+    total_high_score =
+      socket.assigns[:current_user] &&
+        HighScores.get_user_high_score(socket.assigns.current_user.id)
 
-      if total_high_score do
-        if high_score > total_high_score.value do
-          HighScores.update_high_score(total_high_score, %{value: high_score})
-        end
-      else
+    cond do
+      is_winner && !total_high_score ->
         HighScores.create_high_score(%{value: high_score, user_id: socket.assigns.current_user.id})
-      end
+
+        HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
+
+      is_winner && high_score > total_high_score.value ->
+        HighScores.update_high_score(total_high_score, %{value: high_score})
+
+        HangmanWeb.Endpoint.broadcast_from(self(), "top_scores", "update", %{})
+
+      true ->
+        nil
     end
 
     {:noreply,
@@ -125,5 +127,12 @@ defmodule HangmanWeb.GameLive do
        body_img: body_part,
        high_score: high_score
      )}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{topic: "top_scores", event: "update", payload: %{}},
+        socket
+      ) do
+    {:noreply, assign(socket, top5_scores: HighScores.top5_high_scores())}
   end
 end
