@@ -3,3 +3,62 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+.guess {
+    color: black;
+    text-align: center;
+    padding: 5px;
+    position: absolute;
+    top: 80%;
+    left: 0%;
+    width: 100%;
+    font-size: 50px;
+    font-weight: bold;
+
+    }
+      .word {
+    color: black;
+    text-align: center;
+    padding: 5px;
+    position: absolute;
+    top: 3%;
+    left: 25%;
+    width: 50%;
+    font-size: 40px;
+    font-weight: bold;
+
+    }
+    .win {
+      display: block;
+      width: 100%;
+      border: none;
+      background-color: black;
+      color: red;
+      padding: 2px;
+      font-size: 50px;
+      cursor: pointer;
+      text-align: center;
+      height: 300px;
+    }
+    .lives{
+        font-size: 25px;
+        color: black; 
+        display: inline-block;
+        width: 100%;
+        text-align: left;
+        left: 25%;
+    }
+    .pic{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 70%;
+        height: 400px;
+    }
+    .high{
+        font-size: 25px;
+        color: black; 
+        width: 10%;
+        text-align: left;
+        left: 25%;
+    }
